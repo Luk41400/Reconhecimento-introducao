@@ -1,0 +1,995 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VISION ID | Reconhecimento Facial</title>
+
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #080e1c;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #101b30;
+    padding: 20px 5%;
+    border-bottom: 1px solid #263b59;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo {
+    color: #42caff;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+#indicador {
+    color: #ffc46b;
+    font-size: 13px;
+}
+
+main {
+    max-width: 1150px;
+    margin: 35px auto;
+    padding: 15px;
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.subtitulo {
+    color: #a3b5cb;
+    margin-bottom: 30px;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 20px;
+}
+
+.painel {
+    background: #121e32;
+    padding: 23px;
+    border: 1px solid #263750;
+    border-radius: 16px;
+}
+
+h2 {
+    font-size: 20px;
+}
+
+.camera {
+    position: relative;
+    background: #050a13;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: scaleX(-1);
+}
+
+button {
+    cursor: pointer;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+button:hover:not(:disabled) {
+    filter: brightness(1.15);
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.primario {
+    background: #27baff;
+    color: #06101c;
+}
+
+.verde {
+    background: #25d19c;
+    color: #06101c;
+}
+
+.secundario {
+    background: #263650;
+    color: white;
+}
+
+.botoes {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+input {
+    background: #091426;
+    border: 1px solid #334660;
+    color: white;
+    border-radius: 8px;
+    padding: 13px;
+    width: 100%;
+    margin: 10px 0 18px;
+}
+
+label {
+    color: #b7c9df;
+    font-size: 14px;
+}
+
+.abas {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.abas button {
+    flex: 1;
+}
+
+.oculto {
+    display: none !important;
+}
+
+.progresso {
+    display: flex;
+    gap: 8px;
+    margin: 18px 0;
+}
+
+.ponto {
+    flex: 1;
+    height: 10px;
+    border-radius: 8px;
+    background: #30435b;
+}
+
+.ponto.ativo {
+    background: #25d19c;
+}
+
+#status, #resultado {
+    padding: 14px;
+    border-radius: 9px;
+    background: #1b2c43;
+    color: #c5def5;
+    margin-top: 18px;
+    line-height: 1.5;
+}
+
+.sucesso {
+    background: #10392e !important;
+    color: #8ff0bc !important;
+}
+
+.erro {
+    background: #42202a !important;
+    color: #ffb6c0 !important;
+}
+
+.lista {
+    margin-top: 26px;
+    border-top: 1px solid #334660;
+    padding-top: 15px;
+}
+
+.pessoa {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    margin-top: 8px;
+    background: #192a41;
+    border-radius: 8px;
+}
+
+.pessoa button {
+    background: #512333;
+    color: #ffd5db;
+    padding: 8px;
+}
+
+dialog {
+    background: #101d32;
+    color: white;
+    border: 1px solid #3a526e;
+    border-radius: 15px;
+    padding: 25px;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+}
+
+dialog::backdrop {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+dialog img {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 10px;
+    margin: 15px 0;
+}
+
+@media (max-width: 800px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">◈ VISION ID</div>
+    <div id="indicador">Carregando IA...</div>
+</header>
+
+<main>
+
+<h1>Sistema de Reconhecimento Facial</h1>
+
+<p class="subtitulo">
+    Cadastro biométrico e identificação facial com inteligência artificial.
+</p>
+
+<div class="container">
+
+<section class="painel">
+
+<h2>📷 Câmera</h2>
+
+<div class="camera">
+    <video id="video" autoplay muted playsinline></video>
+</div>
+
+<div class="botoes">
+    <button class="primario" id="ligar">Ligar câmera</button>
+    <button class="secundario" id="desligar">Desligar</button>
+</div>
+
+<div id="status">
+    Aguardando carregamento da inteligência artificial.
+</div>
+
+</section>
+
+<section class="painel">
+
+<div class="abas">
+    <button class="primario" id="abaCadastro">
+        Cadastrar
+    </button>
+
+    <button class="secundario" id="abaReconhecer">
+        Reconhecer
+    </button>
+</div>
+
+<div id="cadastro">
+
+<h2>Cadastrar rosto</h2>
+
+<p>
+    Faça cinco capturas em posições diferentes
+    para melhorar o cadastro facial.
+</p>
+
+<label for="nome">Nome da pessoa</label>
+<input id="nome" placeholder="Digite o nome">
+
+<p id="orientacao">
+    1. Olhe diretamente para a câmera.
+</p>
+
+<div class="progresso">
+    <div class="ponto"></div>
+    <div class="ponto"></div>
+    <div class="ponto"></div>
+    <div class="ponto"></div>
+    <div class="ponto"></div>
+</div>
+
+<p id="contador">0 de 5 amostras</p>
+
+<div class="botoes">
+    <button class="primario" id="capturar" disabled>
+        Capturar rosto
+    </button>
+
+    <button class="secundario" id="reiniciar">
+        Reiniciar
+    </button>
+</div>
+
+<button class="verde" id="salvar" disabled>
+    Salvar cadastro facial
+</button>
+
+</div>
+
+<div id="reconhecimento" class="oculto">
+
+<h2>Reconhecer rosto</h2>
+
+<p>
+    Posicione seu rosto diante da câmera
+    e clique no botão abaixo.
+</p>
+
+<button class="primario" id="reconhecer" disabled>
+    Reconhecer agora
+</button>
+
+<div id="resultado">
+    Aguardando reconhecimento.
+</div>
+
+</div>
+
+<div class="lista">
+    <h3>Rostos cadastrados</h3>
+
+    <div id="listaPessoas">
+        Nenhum rosto cadastrado.
+    </div>
+</div>
+
+</section>
+
+</div>
+</main>
+
+<dialog id="janela">
+
+<h2>✅ Rosto reconhecido!</h2>
+
+<h3 id="nomeReconhecido"></h3>
+
+<img id="imagemReconhecida" src="glen.jpg" alt="Imagem Glen">
+
+<p id="avisoImagem" class="oculto">
+    Não foi possível carregar glen.jpg.
+</p>
+
+<button class="primario" id="fechar">
+    Fechar imagem
+</button>
+
+</dialog>
+
+<script>
+const URL_MODELOS =
+    "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model";
+
+const IMAGEM_RECONHECIMENTO = "glen.jpg";
+const CHAVE = "vision_id_cadastros";
+
+const video = document.getElementById("video");
+const statusEl = document.getElementById("status");
+const resultado = document.getElementById("resultado");
+
+let cameraAtiva = null;
+let modelosProntos = false;
+let ocupado = false;
+let amostras = [];
+let pessoas = [];
+
+const orientacoes = [
+    "1. Olhe diretamente para a câmera.",
+    "2. Vire levemente o rosto para a esquerda.",
+    "3. Vire levemente o rosto para a direita.",
+    "4. Incline um pouco o rosto para cima.",
+    "5. Olhe novamente para a frente."
+];
+
+// Recupera os cadastros do navegador.
+try {
+    const dados = JSON.parse(
+        localStorage.getItem(CHAVE) || "[]"
+    );
+
+    if (Array.isArray(dados)) {
+        pessoas = dados;
+    }
+} catch (erro) {
+    console.error("Erro ao ler cadastros:", erro);
+}
+
+function mensagem(texto, tipo = "") {
+    statusEl.textContent = texto;
+    statusEl.className = tipo;
+}
+
+function atualizarBotoes() {
+    const pronto =
+        modelosProntos &&
+        cameraAtiva !== null &&
+        video.readyState >= 2 &&
+        !ocupado;
+
+    document.getElementById("capturar").disabled =
+        !pronto || amostras.length >= 5;
+
+    document.getElementById("salvar").disabled =
+        !pronto || amostras.length !== 5;
+
+    document.getElementById("reconhecer").disabled =
+        !pronto;
+}
+
+async function iniciarSistema() {
+    configurarEventos();
+    atualizarLista();
+
+    try {
+        if (typeof faceapi === "undefined") {
+            throw new Error("Biblioteca de IA indisponível.");
+        }
+
+        mensagem("Carregando modelos faciais...");
+
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(
+                URL_MODELOS
+            ),
+            faceapi.nets.faceLandmark68TinyNet.loadFromUri(
+                URL_MODELOS
+            ),
+            faceapi.nets.faceRecognitionNet.loadFromUri(
+                URL_MODELOS
+            )
+        ]);
+
+        modelosProntos = true;
+
+        document.getElementById("indicador").textContent =
+            "● Inteligência artificial pronta";
+
+        document.getElementById("indicador").style.color =
+            "#25d19c";
+
+        mensagem("IA pronta! Ligue a câmera.");
+
+    } catch (erro) {
+        console.error(erro);
+
+        mensagem(
+            "Erro ao carregar IA. Verifique a internet.",
+            "erro"
+        );
+    }
+
+    atualizarBotoes();
+}
+
+async function ligarCamera() {
+    try {
+        desligarCamera();
+
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error(
+                "Abra o site pelo Live Server ou por HTTPS."
+            );
+        }
+
+        cameraAtiva =
+            await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: "user"
+                }
+            });
+
+        video.srcObject = cameraAtiva;
+        await video.play();
+
+        mensagem("Câmera ligada. Posicione seu rosto.");
+
+    } catch (erro) {
+        desligarCamera();
+        mensagem(
+            "Erro ao acessar a câmera: " + erro.message,
+            "erro"
+        );
+    }
+
+    atualizarBotoes();
+}
+
+function desligarCamera() {
+    if (cameraAtiva) {
+        cameraAtiva.getTracks().forEach(track => {
+            track.stop();
+        });
+    }
+
+    cameraAtiva = null;
+    video.srcObject = null;
+
+    atualizarBotoes();
+}
+
+function opcoesDeteccao() {
+    return new faceapi.TinyFaceDetectorOptions({
+        inputSize: 416,
+        scoreThreshold: 0.55
+    });
+}
+
+async function detectarRosto() {
+    if (!cameraAtiva || video.readyState < 2) {
+        throw new Error("A câmera não está pronta.");
+    }
+
+    const rostos = await faceapi
+        .detectAllFaces(video, opcoesDeteccao())
+        .withFaceLandmarks(true)
+        .withFaceDescriptors();
+
+    if (rostos.length === 0) {
+        throw new Error(
+            "Nenhum rosto detectado. Olhe para a câmera."
+        );
+    }
+
+    if (rostos.length > 1) {
+        throw new Error(
+            "Deixe apenas uma pessoa diante da câmera."
+        );
+    }
+
+    const rosto = rostos[0];
+    const caixa = rosto.detection.box;
+
+    if (
+        caixa.width < 110 ||
+        caixa.height < 110 ||
+        rosto.detection.score < 0.70
+    ) {
+        throw new Error(
+            "Aproxime o rosto e melhore a iluminação."
+        );
+    }
+
+    return Array.from(rosto.descriptor);
+}
+
+function distancia(a, b) {
+    if (a.length !== b.length) {
+        return Infinity;
+    }
+
+    let soma = 0;
+
+    for (let i = 0; i < a.length; i++) {
+        soma += (a[i] - b[i]) ** 2;
+    }
+
+    return Math.sqrt(soma);
+}
+
+function atualizarAmostras() {
+    const pontos = document.querySelectorAll(".ponto");
+
+    pontos.forEach((ponto, indice) => {
+        ponto.classList.toggle(
+            "ativo",
+            indice < amostras.length
+        );
+    });
+
+    document.getElementById("contador").textContent =
+        `${amostras.length} de 5 amostras`;
+
+    document.getElementById("orientacao").textContent =
+        orientacoes[amostras.length] ||
+        "Capturas concluídas! Salve seu cadastro.";
+
+    atualizarBotoes();
+}
+
+async function capturarRosto() {
+    if (ocupado || !cameraAtiva || amostras.length >= 5) {
+        return;
+    }
+
+    ocupado = true;
+    atualizarBotoes();
+
+    try {
+        mensagem("Analisando características faciais...");
+
+        const descritor = await detectarRosto();
+
+        const repetida = amostras.some(anterior =>
+            distancia(anterior, descritor) < 0.035
+        );
+
+        if (repetida) {
+            throw new Error(
+                "Mude um pouco a posição do rosto e tente novamente."
+            );
+        }
+
+        amostras.push(descritor);
+
+        atualizarAmostras();
+
+        mensagem(
+            `Amostra ${amostras.length} capturada com sucesso!`,
+            "sucesso"
+        );
+
+    } catch (erro) {
+        mensagem(erro.message, "erro");
+
+    } finally {
+        ocupado = false;
+        atualizarBotoes();
+    }
+}
+
+function reiniciarAmostras() {
+    if (ocupado) return;
+
+    amostras = [];
+
+    atualizarAmostras();
+
+    mensagem("Cadastro reiniciado.");
+}
+
+async function salvarCadastro() {
+    if (ocupado) return;
+
+    const nome = document
+        .getElementById("nome")
+        .value
+        .trim();
+
+    if (!nome) {
+        mensagem("Digite o nome da pessoa.", "erro");
+        return;
+    }
+
+    if (amostras.length !== 5) {
+        mensagem("Capture as cinco amostras.", "erro");
+        return;
+    }
+
+    if (pessoas.some(p =>
+        p.nome.toLowerCase() === nome.toLowerCase()
+    )) {
+        mensagem("Este nome já está cadastrado.", "erro");
+        return;
+    }
+
+    ocupado = true;
+    atualizarBotoes();
+
+    try {
+        // Verificação de possível cadastro duplicado.
+        for (const pessoa of pessoas) {
+            if (!Array.isArray(pessoa.descritores)) continue;
+
+            for (const nova of amostras) {
+                const distancias = pessoa.descritores.map(
+                    d => distancia(nova, d)
+                );
+
+                if (
+                    distancias.length > 0 &&
+                    Math.min(...distancias) < 0.43
+                ) {
+                    throw new Error(
+                        "Este rosto pode já estar cadastrado como " +
+                        pessoa.nome
+                    );
+                }
+            }
+        }
+
+        const cadastro = {
+            id: crypto.randomUUID(),
+            nome: nome,
+            descritores: amostras.map(d => [...d])
+        };
+
+        const novos = [...pessoas, cadastro];
+
+        // Salva somente os descritores no navegador.
+        localStorage.setItem(
+            CHAVE,
+            JSON.stringify(novos)
+        );
+
+        pessoas = novos;
+        amostras = [];
+
+        document.getElementById("nome").value = "";
+
+        atualizarAmostras();
+        atualizarLista();
+
+        mensagem(
+            "Rosto cadastrado com sucesso!",
+            "sucesso"
+        );
+
+        trocarAba("reconhecimento");
+
+    } catch (erro) {
+        mensagem(
+            "Erro ao salvar: " + erro.message,
+            "erro"
+        );
+
+    } finally {
+        ocupado = false;
+        atualizarBotoes();
+    }
+}
+
+async function reconhecerRosto() {
+    if (ocupado || !modelosProntos || !cameraAtiva) {
+        return;
+    }
+
+    ocupado = true;
+    atualizarBotoes();
+
+    resultado.className = "";
+    resultado.textContent = "Analisando rosto...";
+
+    try {
+        if (pessoas.length === 0) {
+            throw new Error(
+                "Nenhum rosto cadastrado neste navegador."
+            );
+        }
+
+        const descritor = await detectarRosto();
+
+        let melhorPessoa = null;
+        let melhorPontuacao = Infinity;
+
+        for (const pessoa of pessoas) {
+            if (
+                !Array.isArray(pessoa.descritores) ||
+                pessoa.descritores.length < 2
+            ) {
+                continue;
+            }
+
+            const distancias = pessoa.descritores
+                .map(d => distancia(descritor, d))
+                .sort((a, b) => a - b);
+
+            // Combina as duas menores distâncias.
+            const pontuacao =
+                distancias[0] * 0.7 +
+                distancias[1] * 0.3;
+
+            if (pontuacao < melhorPontuacao) {
+                melhorPontuacao = pontuacao;
+                melhorPessoa = pessoa;
+            }
+        }
+
+        // Limite experimental de semelhança.
+        const LIMITE = 0.48;
+
+        if (
+            melhorPessoa &&
+            melhorPontuacao <= LIMITE
+        ) {
+            resultado.className = "sucesso";
+
+            resultado.textContent =
+                "✅ Rosto reconhecido: " +
+                melhorPessoa.nome;
+
+            document.getElementById(
+                "nomeReconhecido"
+            ).textContent = melhorPessoa.nome;
+
+            // IMAGEM EXIBIDA QUANDO RECONHECER.
+            const imagem = document.getElementById(
+                "imagemReconhecida"
+            );
+
+            imagem.src = IMAGEM_RECONHECIMENTO;
+
+            document.getElementById(
+                "avisoImagem"
+            ).classList.add("oculto");
+
+            document.getElementById(
+                "janela"
+            ).showModal();
+
+        } else {
+            resultado.className = "erro";
+
+            resultado.textContent =
+                "❌ Rosto não cadastrado.";
+        }
+
+    } catch (erro) {
+        resultado.className = "erro";
+        resultado.textContent = erro.message;
+
+    } finally {
+        ocupado = false;
+        atualizarBotoes();
+    }
+}
+
+function atualizarLista() {
+    const lista = document.getElementById(
+        "listaPessoas"
+    );
+
+    lista.replaceChildren();
+
+    if (pessoas.length === 0) {
+        lista.textContent = "Nenhum rosto cadastrado.";
+        return;
+    }
+
+    pessoas.forEach(pessoa => {
+        const div = document.createElement("div");
+        div.className = "pessoa";
+
+        const nome = document.createElement("span");
+        nome.textContent = "👤 " + pessoa.nome;
+
+        const botao = document.createElement("button");
+        botao.textContent = "Excluir";
+
+        botao.onclick = () => excluirPessoa(pessoa.id);
+
+        div.append(nome, botao);
+        lista.appendChild(div);
+    });
+}
+
+function excluirPessoa(id) {
+    if (!confirm("Excluir este cadastro facial?")) {
+        return;
+    }
+
+    const novos = pessoas.filter(p => p.id !== id);
+
+    try {
+        localStorage.setItem(
+            CHAVE,
+            JSON.stringify(novos)
+        );
+
+        pessoas = novos;
+
+        atualizarLista();
+
+        mensagem("Cadastro excluído.", "sucesso");
+
+    } catch (erro) {
+        mensagem("Não foi possível excluir.", "erro");
+    }
+}
+
+function trocarAba(aba) {
+    const cadastro = aba === "cadastro";
+
+    document.getElementById(
+        "cadastro"
+    ).classList.toggle("oculto", !cadastro);
+
+    document.getElementById(
+        "reconhecimento"
+    ).classList.toggle("oculto", cadastro);
+
+    document.getElementById(
+        "abaCadastro"
+    ).className = cadastro
+        ? "primario"
+        : "secundario";
+
+    document.getElementById(
+        "abaReconhecer"
+    ).className = cadastro
+        ? "secundario"
+        : "primario";
+}
+
+function configurarEventos() {
+    document.getElementById("ligar").onclick =
+        ligarCamera;
+
+    document.getElementById("desligar").onclick =
+        desligarCamera;
+
+    document.getElementById("capturar").onclick =
+        capturarRosto;
+
+    document.getElementById("reiniciar").onclick =
+        reiniciarAmostras;
+
+    document.getElementById("salvar").onclick =
+        salvarCadastro;
+
+    document.getElementById("reconhecer").onclick =
+        reconhecerRosto;
+
+    document.getElementById("abaCadastro").onclick =
+        () => trocarAba("cadastro");
+
+    document.getElementById("abaReconhecer").onclick =
+        () => trocarAba("reconhecimento");
+
+    document.getElementById("fechar").onclick =
+        () => document.getElementById("janela").close();
+
+    const imagem = document.getElementById(
+        "imagemReconhecida"
+    );
+
+    imagem.onerror = () => {
+        document.getElementById(
+            "avisoImagem"
+        ).classList.remove("oculto");
+    };
+
+    window.addEventListener(
+        "pagehide",
+        desligarCamera
+    );
+}
+
+window.addEventListener("load", iniciarSistema);
+</script>
+
+</body>
+</html>
